@@ -17,6 +17,14 @@ export default class ProductItem extends Component {
         >
           View Details
         </button>
+        <button
+          style={{ marginLeft: 10 }}
+          onClick={() => {
+            this.props.addToCart(this.props.item);
+          }}
+        >
+          Add to Cart
+        </button>
       </div>
     );
   }

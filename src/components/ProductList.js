@@ -1,4 +1,5 @@
 import React, { Component } from "react";
+import Cart from "./Cart";
 import Modal from "./Modal";
 import ProductItem from "./ProductItem";
 import styles from "./ProductList.module.css";
@@ -149,6 +150,8 @@ export default class ProductList extends Component {
 
   state = {
     selectedItem: null,
+    isShowCart: false,
+    cart: [],
   };
 
   setSelectedItem = (dataFromChild) => {
@@ -157,36 +160,142 @@ export default class ProductList extends Component {
     });
   };
 
-  handleClose = () => {
+  closeModal = () => {
     this.setState({
       selectedItem: null,
     });
   };
 
+  is;
+
   renderProducts = () => {
     const html = this.shoes.map((item) => {
       return (
         <div key={item.id}>
-          <ProductItem item={item} setSelectedItem={this.setSelectedItem} />
+          <ProductItem
+            item={item}
+            setSelectedItem={this.setSelectedItem}
+            addToCart={this.addToCart}
+          />
         </div>
       );
     });
     return html;
   };
 
+  showCart = () => {
+    this.setState({
+      isShowCart: true,
+    });
+  };
+
+  closeCart = () => {
+    this.setState({
+      isShowCart: false,
+    });
+  };
+
+  addToCart = (product) => {
+    const cloneCart = [...this.state.cart];
+    const cartItem = {
+      product: product,
+      quantity: 1,
+    };
+    const foundItem = cloneCart.find((item) => product.id === item.product.id);
+    if (foundItem) {
+      foundItem.quantity += 1;
+    } else {
+      cloneCart.push(cartItem);
+    }
+    this.setState({
+      cart: cloneCart,
+    });
+  };
+
+  calcTotalCartItem = () => {
+    return this.state.cart.reduce((total, item) => {
+      return (total += item.quantity);
+    }, 0);
+  };
+
+  deleteCartItem = (id) => {
+    const cloneCart = [...this.state.cart];
+    const foundIndex = cloneCart.findIndex((item) => id === item.product.id);
+    cloneCart.splice(foundIndex, 1);
+    this.setState({
+      cart: cloneCart,
+    });
+  };
+
+  increaseQty = (id) => {
+    const cloneCart = [...this.state.cart];
+    const foundItem = cloneCart.find((item) => id === item.product.id);
+    if (foundItem) {
+      foundItem.quantity += 1;
+    }
+    this.setState({
+      cart: cloneCart,
+    });
+  };
+
+  decreaseQty = (id) => {
+    const cloneCart = [...this.state.cart];
+    const foundItem = cloneCart.find((item) => id === item.product.id);
+    if (foundItem && foundItem.quantity > 1) {
+      foundItem.quantity -= 1;
+    }
+    this.setState({
+      cart: cloneCart,
+    });
+  };
+
+  calcTotalSum = () => {
+    return this.state.cart.reduce((total, item) => {
+      return (total += item.product.price * item.quantity);
+    }, 0);
+  };
+
+  checkOut = () => {
+    this.setState({
+      cart: [],
+    });
+    this.closeCart();
+  };
+
   render() {
     return (
-      <div className={styles.list}>
-        {this.renderProducts()}
+      <div>
+        <div className={styles.header}>
+          <h1>Shoes Shop</h1>
+          <button
+            style={{ marginLeft: "auto" }}
+            onClick={() => {
+              this.showCart();
+            }}
+          >
+            <i className="fa-solid fa-cart-shopping"></i>
+            <span> ({this.calcTotalCartItem()})</span>
+          </button>
+        </div>
+        <div className={styles.list}>{this.renderProducts()}</div>
         {this.state.selectedItem ? (
-          <div>
-            <div className={styles.overlay}></div>
-            <Modal
-              item={this.state.selectedItem}
-              handleClose={this.handleClose}
-            />
-          </div>
+          <Modal
+            item={this.state.selectedItem}
+            closeModal={this.closeModal}
+            addToCart={this.addToCart}
+          />
         ) : null}
+        {this.state.isShowCart && (
+          <Cart
+            closeCart={this.closeCart}
+            cart={this.state.cart}
+            deleteCartItem={this.deleteCartItem}
+            increaseQty={this.increaseQty}
+            decreaseQty={this.decreaseQty}
+            calcTotalSum={this.calcTotalSum}
+            checkOut={this.checkOut}
+          />
+        )}
       </div>
     );
   }
